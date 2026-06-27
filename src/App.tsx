@@ -224,21 +224,27 @@ function Sessions({ data, ids, onAsk }: { data: AppData; ids: Set<number>; onAsk
     <div className="space-y-4">
       <Hero data={data} onAsk={onAsk} />
       <SearchInput value={q} onChange={setQ} placeholder={`Search ${data.meta.totalSessions} sessions, speakers, topics…`} />
-      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
+      <div className="flex flex-wrap items-center gap-2">
         <Chip active={!day} onClick={() => setDay("")}>All days</Chip>
         {data.days.map((d) => (
           <Chip key={d} active={day === d} onClick={() => setDay(d)}>
             {d.match(/Day \d+/)?.[0] ?? d}
           </Chip>
         ))}
-      </div>
-      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
-        <Chip active={!track} onClick={() => setTrack("")}>All tracks</Chip>
-        {data.tracks.map((t) => (
-          <Chip key={t} active={track === t} onClick={() => setTrack(track === t ? "" : t)}>
-            {t}
-          </Chip>
-        ))}
+        <select
+          value={track}
+          onChange={(e) => setTrack(e.target.value)}
+          aria-label="Filter by track"
+          className={
+            "ml-auto max-w-[55%] rounded-full border bg-[var(--color-surface)] px-3 py-1.5 text-[12.5px] font-medium outline-none focus:border-[var(--color-accent)] sm:max-w-none " +
+            (track ? "border-[var(--color-accent)] text-[var(--color-ink)]" : "border-[var(--color-line)] text-[var(--color-muted)]")
+          }
+        >
+          <option value="">All tracks ({data.tracks.length})</option>
+          {data.tracks.map((t) => (
+            <option key={t} value={t}>{t}</option>
+          ))}
+        </select>
       </div>
       <p className="px-1 text-[12px] text-[var(--color-faint)] tnum">{filtered.length} sessions</p>
       <div className="grid gap-2.5 lg:grid-cols-2">
@@ -411,7 +417,7 @@ function Ask({ data, ids }: { data: AppData; ids: Set<number> }) {
         </div>
       </div>
 
-      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
+      <div className="flex flex-wrap gap-2">
         {PRESETS.map((p) => (
           <Chip key={p} onClick={() => run(p)}>{p}</Chip>
         ))}
