@@ -12,10 +12,13 @@ This is a **static, no-backend** SPA. No server, no database, no user accounts, 
 - **ICS export** strips `\r\n,;` from all fields (no calendar-property injection).
 - **No secrets** committed or shipped (the semantic model is client-side; no API keys).
 
+## Dependencies
+
+- **`npm audit`: 0 vulnerabilities.** Migrated off `@xenova/transformers` to the maintained **`@huggingface/transformers` v3** (newer onnxruntime), which clears the prior transitive `protobufjs` advisories.
+
 ## Known / accepted
 
-- **`npm audit`: transitive `protobufjs` advisories** via `@xenova/transformers → onnxruntime-web → onnx-proto`. These are reachable only by parsing a **malicious ONNX model**; we load one fixed, trusted model from the HuggingFace CDN, the WASM runtime is self-hosted, and execution is sandboxed in the browser. Real-world exploitability here is low. **Upgrade path:** migrate to `@huggingface/transformers` v3 (newer onnxruntime) to clear the advisories — deferred to avoid an API change before launch.
-- **Model weights** are fetched from the HuggingFace CDN at runtime (data, not code). Standard for client-side ML; allowed in CSP `connect-src`.
+- **Model weights** are fetched from the HuggingFace CDN at runtime (data, not code). Standard for client-side ML; allowed in CSP `connect-src`. The executable ONNX **runtime** is self-hosted (not from a CDN).
 
 ## Host headers
 `public/_headers` (Netlify/Cloudflare Pages format) sets CSP, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, and `Permissions-Policy`. GitHub Pages ignores `_headers` (no custom headers) — so prefer Netlify/Cloudflare for the strongest posture.

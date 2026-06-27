@@ -8,7 +8,7 @@ An **unofficial** attendee companion for the [AI Engineer World's Fair 2026](htt
 
 - **Sessions** — all 557, full-text search + filter by day and by 49 tracks, expandable details.
 - **Speakers** — all 524, photos + bios + their sessions.
-- **Ask what to see** — semantic search over every session, powered by a real embedding model (`all-MiniLM-L6-v2`) running **100% client-side** via [transformers.js](https://github.com/xenova/transformers.js). No server, no API key, no tracking. Keyword fallback while the model loads.
+- **Ask what to see** — semantic search over every session, powered by a real embedding model (`all-MiniLM-L6-v2`) running **100% client-side** via [`@huggingface/transformers`](https://github.com/huggingface/transformers.js) (the ONNX wasm runtime is self-hosted). No server, no API key, no tracking. Keyword fallback while the model loads.
 - **My Agenda** — save sessions (localStorage), grouped by day, overlap warnings, `.ics` export.
 - **More** — side events, venue / floor-plan, roadmap.
 - Responsive: phone-first, desktop-class layout.
@@ -19,7 +19,7 @@ Session `title + track + description` are embedded at **build time** (`npm run e
 
 ## Stack
 
-Vite · React · TypeScript · Tailwind v4 · transformers.js. Static build → deployable to GitHub Pages / Netlify / any static host.
+Vite · React · TypeScript · Tailwind v4 · `@huggingface/transformers` (client-side, self-hosted wasm). Static build → deployable to GitHub Pages / Netlify / any static host.
 
 ## Develop
 

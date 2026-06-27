@@ -2,7 +2,7 @@
 // SAME model the browser uses for the query (Xenova/all-MiniLM-L6-v2, 384-d),
 // so doc + query vectors live in one space. Output → public/data/session-embeddings.json.
 // Run: npm run embed   (must run before `npm run build`).
-import { pipeline } from "@xenova/transformers";
+import { pipeline } from "@huggingface/transformers";
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";

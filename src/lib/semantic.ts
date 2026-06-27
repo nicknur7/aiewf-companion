@@ -11,11 +11,12 @@ let extractorPromise: Promise<any> | null = null;
 async function getExtractor() {
   if (!extractorPromise) {
     extractorPromise = (async () => {
-      const { pipeline, env } = await import("@xenova/transformers");
+      const { pipeline, env } = await import("@huggingface/transformers");
       // Self-host the ONNX wasm runtime from our own origin (no third-party CDN
-      // for executable code; keeps CSP tight). Single-threaded — we don't set
-      // COOP/COEP, so threaded wasm wouldn't run anyway.
-      env.backends.onnx.wasm.wasmPaths = import.meta.env.BASE_URL;
+      // for executable code; keeps CSP tight). Absolute URL from the page root
+      // (BASE_URL resolved against location) so the .wasm + .mjs glue load from
+      // the site root, not relative to the hashed JS chunk in /assets/.
+      env.backends.onnx.wasm.wasmPaths = new URL(import.meta.env.BASE_URL, location.href).href;
       env.backends.onnx.wasm.numThreads = 1;
       // Model weights (data, not code) come from the HF CDN — allowed in CSP.
       env.allowLocalModels = false;
