@@ -91,3 +91,18 @@ export async function loadEmbeddings(): Promise<{ dims: number; vectors: number[
 }
 
 export const SPEAKER_IMG_BASE = "https://www.ai.engineer";
+
+/** Only allow safe link schemes — blocks javascript:/data: URIs from poisoned data. */
+export function safeUrl(u?: string): string | undefined {
+  if (!u) return undefined;
+  const t = u.trim();
+  return /^(https?:|mailto:)/i.test(t) ? t : undefined;
+}
+
+/** Resolve a speaker photo URL safely; returns undefined if not a clean path/URL. */
+export function safePhoto(photoUrl?: string): string | undefined {
+  if (!photoUrl) return undefined;
+  if (/^https:\/\//i.test(photoUrl)) return photoUrl;
+  if (photoUrl.startsWith("/")) return SPEAKER_IMG_BASE + photoUrl;
+  return undefined;
+}

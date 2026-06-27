@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Session, Speaker } from "./types";
-import { SPEAKER_IMG_BASE } from "./lib/data";
+import { safePhoto } from "./lib/data";
 
 export function Spinner({ className = "" }: { className?: string }) {
   return (
@@ -147,17 +147,19 @@ export function SessionCard({
 
 export function SpeakerCard({ speaker, onOpen }: { speaker: Speaker; onOpen: (s: Speaker) => void }) {
   const [imgOk, setImgOk] = useState(true);
+  const photo = safePhoto(speaker.photoUrl);
   const initials = speaker.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
   return (
     <button
       onClick={() => onOpen(speaker)}
       className="flex items-center gap-3 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-3 text-left transition-colors hover:border-[var(--color-accent)]"
     >
-      {speaker.photoUrl && imgOk ? (
+      {photo && imgOk ? (
         <img
-          src={SPEAKER_IMG_BASE + speaker.photoUrl}
+          src={photo}
           alt={speaker.name}
           loading="lazy"
+          referrerPolicy="no-referrer"
           onError={() => setImgOk(false)}
           className="size-12 shrink-0 rounded-full object-cover"
         />

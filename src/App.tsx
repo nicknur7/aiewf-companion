@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { AppData } from "./lib/data";
-import { loadData } from "./lib/data";
+import { loadData, safeUrl } from "./lib/data";
 import type { Session, Speaker, SideEvent } from "./types";
 import * as agenda from "./lib/agenda";
 import { semanticSearch, keywordSearch, warmModel, type Scored } from "./lib/semantic";
@@ -61,7 +61,7 @@ export default function App() {
       <Header data={data} count={ids.size} tab={tab} setTab={setTab} />
       <main className="flex-1 px-4 pb-28 pt-4 sm:px-6 md:pb-14">
         {tab === "sessions" && <Sessions data={data} ids={ids} onAsk={() => setTab("ask")} />}
-        {tab === "speakers" && <Speakers data={data} />}
+        {tab === "speakers" && <Speakers data={data} ids={ids} />}
         {tab === "ask" && <Ask data={data} ids={ids} />}
         {tab === "agenda" && <AgendaView data={data} ids={ids} onGo={() => setTab("sessions")} />}
         {tab === "more" && <More data={data} />}
@@ -252,7 +252,7 @@ function Sessions({ data, ids, onAsk }: { data: AppData; ids: Set<number>; onAsk
 }
 
 /* ---------------- Speakers ---------------- */
-function Speakers({ data }: { data: AppData }) {
+function Speakers({ data, ids }: { data: AppData; ids: Set<number> }) {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState<Speaker | null>(null);
   const filtered = useMemo(() => {
@@ -275,12 +275,32 @@ function Speakers({ data }: { data: AppData }) {
       {filtered.length > 300 && (
         <p className="text-center text-[12px] text-[var(--color-faint)]">Showing first 300 — search to narrow.</p>
       )}
-      {open && <SpeakerModal speaker={open} onClose={() => setOpen(null)} />}
+      {open && <SpeakerModal speaker={open} data={data} ids={ids} onClose={() => setOpen(null)} />}
     </div>
   );
 }
 
-function SpeakerModal({ speaker, onClose }: { speaker: Speaker; onClose: () => void }) {
+const normTitle = (t: string) => t.trim().toLowerCase().replace(/\s+/g, " ");
+
+function SpeakerModal({ speaker, data, ids, onClose }: { speaker: Speaker; data: AppData; ids: Set<number>; onClose: () => void }) {
+  // Map each of the speaker's listed sessions back to the real session record
+  // (which carries the id) so it's fully interactive: star-to-agenda + details.
+  const byTitle = useMemo(() => {
+    const m = new Map<string, Session[]>();
+    for (const s of data.sessions) {
+      const k = normTitle(s.title);
+      (m.get(k) ?? m.set(k, []).get(k)!).push(s);
+    }
+    return m;
+  }, [data.sessions]);
+
+  function resolve(ss: { title: string; time?: string; day?: string }): Session | null {
+    const cands = byTitle.get(normTitle(ss.title)) ?? [];
+    if (cands.length === 0) return null;
+    if (cands.length === 1) return cands[0];
+    return cands.find((c) => c.time === ss.time && c.day === ss.day) ?? cands[0];
+  }
+
   return (
     <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4" onClick={onClose}>
       <div
@@ -295,23 +315,30 @@ function SpeakerModal({ speaker, onClose }: { speaker: Speaker; onClose: () => v
           <button onClick={onClose} className="rounded-lg px-2 py-1 text-[var(--color-faint)] hover:text-[var(--color-ink)]">✕</button>
         </div>
         {speaker.bio && <p className="text-[13.5px] leading-relaxed text-[var(--color-muted)]">{speaker.bio}</p>}
-        {speaker.linkedin && (
-          <a href={speaker.linkedin} target="_blank" rel="noreferrer" className="mt-3 inline-block text-[13px] font-medium text-[var(--color-accent)]">
+        {safeUrl(speaker.linkedin) && (
+          <a href={safeUrl(speaker.linkedin)} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block text-[13px] font-medium text-[var(--color-accent)]">
             LinkedIn ↗
           </a>
         )}
         {speaker.sessions && speaker.sessions.length > 0 && (
           <div className="mt-4">
-            <div className="mb-2 text-[11px] uppercase tracking-wide text-[var(--color-faint)]">Sessions</div>
-            <div className="space-y-2">
-              {speaker.sessions.map((s, i) => (
-                <div key={i} className="rounded-xl border border-[var(--color-line)] bg-[var(--color-surface-2)] p-3">
-                  <div className="text-[13.5px] font-semibold">{s.title}</div>
-                  <div className="mt-0.5 text-[11.5px] text-[var(--color-muted)] tnum">
-                    {[s.day?.match(/Day \d+/)?.[0], s.time, s.track].filter(Boolean).join(" · ")}
+            <div className="mb-2 text-[11px] uppercase tracking-wide text-[var(--color-faint)]">
+              Sessions — tap ☆ to add to your agenda
+            </div>
+            <div className="space-y-2.5">
+              {speaker.sessions.map((ss, i) => {
+                const match = resolve(ss);
+                return match ? (
+                  <SessionCard key={i} session={match} inAgenda={ids.has(match.id)} onToggle={agenda.toggle} />
+                ) : (
+                  <div key={i} className="rounded-xl border border-[var(--color-line)] bg-[var(--color-surface-2)] p-3">
+                    <div className="text-[13.5px] font-semibold">{ss.title}</div>
+                    <div className="mt-0.5 text-[11.5px] text-[var(--color-muted)] tnum">
+                      {[ss.day?.match(/Day \d+/)?.[0], ss.time, ss.track].filter(Boolean).join(" · ")}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -432,11 +459,11 @@ function AgendaView({ data, ids, onGo }: { data: AppData; ids: Set<number>; onGo
       const dayKey = s.day.match(/Day \d+/)?.[0] ?? "";
       const { start, end } = parseTime(s.time, DAY_DATE[dayKey] ?? "2026-06-29");
       lines.push("BEGIN:VEVENT");
-      lines.push(`SUMMARY:${s.title.replace(/[\n,;]/g, " ")}`);
+      lines.push(`SUMMARY:${s.title.replace(/[\r\n,;]/g, " ")}`);
       if (start) lines.push(`DTSTART;TZID=America/Los_Angeles:${start}`);
       if (end) lines.push(`DTEND;TZID=America/Los_Angeles:${end}`);
-      lines.push(`LOCATION:${(s.room || "Moscone West").replace(/[\n,;]/g, " ")}`);
-      lines.push(`DESCRIPTION:${[s.track, s.speakers.join(", ")].filter(Boolean).join(" — ").replace(/[\n,;]/g, " ")}`);
+      lines.push(`LOCATION:${(s.room || "Moscone West").replace(/[\r\n,;]/g, " ")}`);
+      lines.push(`DESCRIPTION:${[s.track, s.speakers.join(", ")].filter(Boolean).join(" — ").replace(/[\r\n,;]/g, " ")}`);
       lines.push("END:VEVENT");
     }
     lines.push("END:VCALENDAR");
@@ -512,7 +539,7 @@ function More({ data }: { data: AppData }) {
           <p className="text-[13px] text-[var(--color-muted)]">
             Everything's in <b className="text-[var(--color-ink)]">Moscone West</b> — Level 1 expo & registration, Level 2 breakouts, Level 3 keynotes.
           </p>
-          <a href="https://www.ai.engineer/worldsfair/2026/map" target="_blank" rel="noreferrer" className="mt-2 inline-block text-[13px] font-medium text-[var(--color-accent)]">
+          <a href="https://www.ai.engineer/worldsfair/2026/map" target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-[13px] font-medium text-[var(--color-accent)]">
             Official floor plan ↗
           </a>
           <div className="mt-3 rounded-xl border border-dashed border-[var(--color-line)] bg-[var(--color-surface-2)] p-3 text-[12px] text-[var(--color-faint)]">
@@ -527,9 +554,9 @@ function More({ data }: { data: AppData }) {
           {data.sideEvents.map((e: SideEvent, i: number) => (
             <a
               key={i}
-              href={e.href}
+              href={safeUrl(e.href)}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="block rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-4 transition-colors hover:border-[var(--color-accent)]"
             >
               <div className="flex items-baseline justify-between gap-2">

@@ -12,7 +12,12 @@ async function getExtractor() {
   if (!extractorPromise) {
     extractorPromise = (async () => {
       const { pipeline, env } = await import("@xenova/transformers");
-      // browser: pull the (quantized) model from the HF CDN, cache in-browser
+      // Self-host the ONNX wasm runtime from our own origin (no third-party CDN
+      // for executable code; keeps CSP tight). Single-threaded — we don't set
+      // COOP/COEP, so threaded wasm wouldn't run anyway.
+      env.backends.onnx.wasm.wasmPaths = import.meta.env.BASE_URL;
+      env.backends.onnx.wasm.numThreads = 1;
+      // Model weights (data, not code) come from the HF CDN — allowed in CSP.
       env.allowLocalModels = false;
       return pipeline("feature-extraction", "Xenova/all-MiniLM-L6-v2");
     })();
