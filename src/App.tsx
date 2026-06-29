@@ -247,7 +247,7 @@ function Sessions({ data, ids, onAsk }: { data: AppData; ids: Set<number>; onAsk
         </select>
       </div>
       <p className="px-1 text-[12px] text-[var(--color-faint)] tnum">{filtered.length} sessions</p>
-      <div className="grid gap-2.5 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-2">
         {filtered.map((s) => (
           <SessionCard key={s.id} session={s} inAgenda={ids.has(s.id)} onToggle={agenda.toggle} />
         ))}
@@ -273,7 +273,7 @@ function Speakers({ data, ids }: { data: AppData; ids: Set<number> }) {
     <div className="space-y-3">
       <SearchInput value={q} onChange={setQ} placeholder={`Search ${data.meta.totalSpeakers} speakers & companies…`} />
       <p className="px-1 text-[12px] text-[var(--color-faint)] tnum">{filtered.length} speakers</p>
-      <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.slice(0, 300).map((s) => (
           <SpeakerCard key={s.name} speaker={s} onOpen={setOpen} />
         ))}
@@ -556,7 +556,7 @@ function More({ data }: { data: AppData }) {
 
       <section>
         <h2 className="mb-2 text-[13px] font-semibold text-[var(--color-muted)]">Side events ({data.sideEvents.length})</h2>
-        <div className="grid gap-2.5 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
           {data.sideEvents.map((e: SideEvent, i: number) => (
             <a
               key={i}
