@@ -6,9 +6,10 @@ import * as agenda from "./lib/agenda";
 import { semanticSearch, keywordSearch, warmModel, type Scored } from "./lib/semantic";
 import { Chip, SearchInput, SessionCard, SpeakerCard, Spinner } from "./components";
 
-type Tab = "sessions" | "speakers" | "ask" | "agenda" | "more";
+type Tab = "foryou" | "sessions" | "speakers" | "ask" | "agenda" | "more";
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
+  { id: "foryou", label: "For You", icon: "M9 20l-6-3V4l6 3 6-3 6 3v13l-6-3-6 3zM9 7v13M15 4v13" },
   { id: "sessions", label: "Sessions", icon: "M4 6h16M4 12h16M4 18h10" },
   { id: "speakers", label: "Speakers", icon: "M16 21v-2a4 4 0 0 0-8 0v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" },
   { id: "ask", label: "Ask", icon: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" },
@@ -60,6 +61,7 @@ export default function App() {
     <div className="mx-auto flex min-h-full max-w-6xl flex-col">
       <Header data={data} count={ids.size} tab={tab} setTab={setTab} />
       <main className="flex-1 px-4 pb-28 pt-4 sm:px-6 md:pb-14">
+        {tab === "foryou" && <ForYou data={data} ids={ids} />}
         {tab === "sessions" && <Sessions data={data} ids={ids} onAsk={() => setTab("ask")} />}
         {tab === "speakers" && <Speakers data={data} ids={ids} />}
         {tab === "ask" && <Ask data={data} ids={ids} />}
@@ -164,6 +166,98 @@ function Footer() {
       Unofficial companion · not affiliated with AI Engineer · built on the conference's open data · by Nicholas Nuraliyev ·{" "}
       <a href="mailto:nicknur7@gmail.com" className="text-[var(--color-accent)]">nicknur7@gmail.com</a>
     </footer>
+  );
+}
+
+/* ---------------- For You (personalized itinerary) ---------------- */
+const ACCESS: Record<string, { label: string; cls: string }> = {
+  "in-person": { label: "in person · expo stage", cls: "text-[var(--color-accent)] border-[var(--color-accent)]/40" },
+  overflow: { label: "overflow viewing", cls: "text-[var(--color-muted)] border-[var(--color-line)]" },
+  chase: { label: "check access / recording", cls: "text-[var(--color-faint)] border-[var(--color-line)]" },
+};
+
+function ForYou({ data, ids }: { data: AppData; ids: Set<number> }) {
+  const [fy, setFy] = useState<{ intro: string; picks: any[]; people: any[]; neilNote: string } | null | false>(null);
+  useEffect(() => {
+    fetch(new URL("data/foryou.json", document.baseURI))
+      .then((r) => r.json())
+      .then(setFy)
+      .catch(() => setFy(false));
+  }, []);
+  const byTitle = useMemo(() => {
+    const m = new Map<string, Session>();
+    for (const s of data.sessions) {
+      const k = normTitle(s.title);
+      if (!m.has(k)) m.set(k, s);
+    }
+    return m;
+  }, [data.sessions]);
+
+  if (fy === null) return <div className="grid place-items-center py-16"><Spinner className="size-6" /></div>;
+  if (!fy) return <Empty>Couldn't load your plan.</Empty>;
+
+  return (
+    <div className="space-y-7">
+      <section className="rounded-lg border-l-2 border-l-[var(--color-accent)] border-y border-r border-[var(--color-line)] bg-[var(--color-surface)] p-6">
+        <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--color-accent)]">Your plan · focused for you</p>
+        <h2 className="mt-2 text-[24px] font-black leading-tight tracking-tight sm:text-[30px]">What to see, who to talk to</h2>
+        <p className="mt-2.5 text-[13.5px] leading-relaxed text-[var(--color-muted)]">{fy.intro}</p>
+      </section>
+
+      <section>
+        <h3 className="mb-3 font-mono text-[11px] uppercase tracking-wide text-[var(--color-faint)]">Talks to catch ({fy.picks.length})</h3>
+        <div className="space-y-5">
+          {fy.picks.map((p) => {
+            const s = byTitle.get(normTitle(p.title));
+            const a = ACCESS[p.access] ?? ACCESS.chase;
+            return (
+              <div key={p.title} className="space-y-2">
+                <span className={"inline-block rounded-sm border px-1.5 py-0.5 font-mono text-[9.5px] uppercase tracking-wide " + a.cls}>{a.label}</span>
+                <p className="text-[13px] leading-relaxed text-[var(--color-muted)]"><span className="font-medium text-[var(--color-ink)]">Why: </span>{p.why}</p>
+                {s ? (
+                  <SessionCard session={s} inAgenda={ids.has(s.id)} onToggle={agenda.toggle} />
+                ) : (
+                  <div className="rounded-md border border-dashed border-[var(--color-line)] p-3 text-[13px] text-[var(--color-faint)]">{p.title}</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <section>
+        <h3 className="mb-3 font-mono text-[11px] uppercase tracking-wide text-[var(--color-faint)]">People to find ({fy.people.length})</h3>
+        <div className="space-y-3">
+          {fy.people.map((p) => <PersonCard key={p.name} p={p} />)}
+        </div>
+      </section>
+
+      <section className="rounded-md border border-[var(--color-line)] bg-[var(--color-surface)] p-4">
+        <h3 className="mb-1.5 font-mono text-[11px] uppercase tracking-wide text-[var(--color-accent)]">Finding Neil</h3>
+        <p className="text-[13px] leading-relaxed text-[var(--color-muted)]">{fy.neilNote}</p>
+      </section>
+    </div>
+  );
+}
+
+function PersonCard({ p }: { p: { name: string; title: string; tag?: string; why: string; hook?: string; linkedin?: string } }) {
+  return (
+    <div className="rounded-md border border-[var(--color-line)] bg-[var(--color-surface)] p-4">
+      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+        <span className="text-[15px] font-semibold text-[var(--color-ink)]">{p.name}</span>
+        {p.tag && (
+          <span className="rounded-sm bg-[var(--color-accent)]/12 px-1.5 py-0.5 font-mono text-[9.5px] uppercase tracking-wide text-[var(--color-accent)]">{p.tag}</span>
+        )}
+      </div>
+      <div className="mt-0.5 font-mono text-[11px] text-[var(--color-muted)]">{p.title}</div>
+      <p className="mt-2 text-[13px] leading-relaxed text-[var(--color-muted)]"><span className="font-medium text-[var(--color-ink)]">Why: </span>{p.why}</p>
+      {p.hook && (
+        <p className="mt-2 border-l-2 border-[var(--color-line)] pl-3 text-[13px] italic leading-relaxed text-[var(--color-muted)]">"{p.hook}"</p>
+      )}
+      {p.linkedin && (
+        <a href={p.linkedin} target="_blank" rel="noopener" className="mt-2.5 inline-block font-mono text-[11px] text-[var(--color-accent)]">linkedin &#8599;</a>
+      )}
+    </div>
   );
 }
 
