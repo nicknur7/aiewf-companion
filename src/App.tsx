@@ -82,11 +82,11 @@ function Header({ data, count, tab, setTab }: { data: AppData; count: number; ta
       <div className="flex items-center justify-between gap-4">
         <button onClick={() => setTab("sessions")} className="text-left">
           <div className="flex items-center gap-2">
-            <span className="grid size-7 place-items-center rounded-lg bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent-2)] text-[13px] font-black text-black">
+            <span className="grid size-7 place-items-center rounded-sm bg-[var(--color-accent)] font-mono text-[12px] font-bold text-black">
               WF
             </span>
             <h1 className="text-[16px] font-bold tracking-tight">Companion</h1>
-            <span className="rounded-full border border-[var(--color-line)] px-1.5 py-0.5 text-[9.5px] font-medium uppercase tracking-wide text-[var(--color-faint)]">
+            <span className="rounded-sm border border-[var(--color-line)] px-1.5 py-0.5 font-mono text-[9.5px] uppercase tracking-wide text-[var(--color-faint)]">
               unofficial
             </span>
           </div>
@@ -101,7 +101,7 @@ function Header({ data, count, tab, setTab }: { data: AppData; count: number; ta
                 key={t.id}
                 onClick={() => setTab(t.id)}
                 className={
-                  "relative rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors " +
+                  "relative rounded-md px-3 py-1.5 font-mono text-[12px] transition-colors " +
                   (active
                     ? "bg-[var(--color-surface-2)] text-[var(--color-ink)]"
                     : "text-[var(--color-muted)] hover:text-[var(--color-ink)]")
@@ -170,12 +170,12 @@ function Footer() {
 /* ---------------- Hero (the "landing" / advertisement) ---------------- */
 function Hero({ data, onAsk }: { data: AppData; onAsk: () => void }) {
   return (
-    <section className="overflow-hidden rounded-3xl border border-[var(--color-line)] bg-gradient-to-br from-[var(--color-surface)] to-[var(--color-bg)] p-6 sm:p-8">
+    <section className="overflow-hidden rounded-lg border-l-2 border-l-[var(--color-accent)] border-y border-r border-[var(--color-line)] bg-[var(--color-surface)] p-6 sm:p-8">
       <div className="max-w-3xl">
-        <p className="text-[12px] font-medium uppercase tracking-[0.14em] text-[var(--color-accent)]">
+        <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--color-accent)]">
           {data.meta.dates} · Moscone West, SF
         </p>
-        <h2 className="mt-2 text-[26px] font-bold leading-tight tracking-tight sm:text-[34px]">
+        <h2 className="mt-2 text-[28px] font-black leading-[1.05] tracking-tight sm:text-[38px]">
           Your companion for the AI Engineer World's Fair
         </h2>
         <p className="mt-3 text-[14.5px] leading-relaxed text-[var(--color-muted)] sm:text-[16px]">
@@ -186,14 +186,14 @@ function Hero({ data, onAsk }: { data: AppData; onAsk: () => void }) {
         <div className="mt-5 flex flex-wrap items-center gap-2.5">
           <button
             onClick={onAsk}
-            className="rounded-xl bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-2)] px-5 py-2.5 text-[14px] font-semibold text-black"
+            className="rounded-md bg-[var(--color-accent)] px-5 py-2.5 font-mono text-[13px] font-semibold text-black transition-opacity hover:opacity-90"
           >
-            ✨ Ask what to see
+            &#8250; ask what to see
           </button>
-          <div className="flex gap-2 text-[12px] text-[var(--color-faint)]">
-            <span className="rounded-lg border border-[var(--color-line)] px-2.5 py-2 tnum">{data.meta.totalSessions} sessions</span>
-            <span className="rounded-lg border border-[var(--color-line)] px-2.5 py-2 tnum">{data.tracks.length} tracks</span>
-            <span className="rounded-lg border border-[var(--color-line)] px-2.5 py-2 tnum">{data.meta.totalSpeakers} speakers</span>
+          <div className="flex gap-2 font-mono text-[11px] text-[var(--color-faint)]">
+            <span className="rounded-md border border-[var(--color-line)] px-2.5 py-2 tnum">{data.meta.totalSessions} sessions</span>
+            <span className="rounded-md border border-[var(--color-line)] px-2.5 py-2 tnum">{data.tracks.length} tracks</span>
+            <span className="rounded-md border border-[var(--color-line)] px-2.5 py-2 tnum">{data.meta.totalSpeakers} speakers</span>
           </div>
         </div>
       </div>
@@ -236,7 +236,7 @@ function Sessions({ data, ids, onAsk }: { data: AppData; ids: Set<number>; onAsk
           onChange={(e) => setTrack(e.target.value)}
           aria-label="Filter by track"
           className={
-            "ml-auto max-w-[55%] rounded-full border bg-[var(--color-surface)] px-3 py-1.5 text-[12.5px] font-medium outline-none focus:border-[var(--color-accent)] sm:max-w-none " +
+            "ml-auto max-w-[55%] rounded-md border bg-[var(--color-surface)] px-3 py-1.5 font-mono text-[11px] outline-none focus:border-[var(--color-accent)] sm:max-w-none " +
             (track ? "border-[var(--color-accent)] text-[var(--color-ink)]" : "border-[var(--color-line)] text-[var(--color-muted)]")
           }
         >
@@ -246,7 +246,7 @@ function Sessions({ data, ids, onAsk }: { data: AppData; ids: Set<number>; onAsk
           ))}
         </select>
       </div>
-      <p className="px-1 text-[12px] text-[var(--color-faint)] tnum">{filtered.length} sessions</p>
+      <p className="px-1 font-mono text-[11px] text-[var(--color-faint)] tnum">{filtered.length} sessions</p>
       <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-2">
         {filtered.map((s) => (
           <SessionCard key={s.id} session={s} inAgenda={ids.has(s.id)} onToggle={agenda.toggle} />
@@ -272,7 +272,7 @@ function Speakers({ data, ids }: { data: AppData; ids: Set<number> }) {
   return (
     <div className="space-y-3">
       <SearchInput value={q} onChange={setQ} placeholder={`Search ${data.meta.totalSpeakers} speakers & companies…`} />
-      <p className="px-1 text-[12px] text-[var(--color-faint)] tnum">{filtered.length} speakers</p>
+      <p className="px-1 font-mono text-[11px] text-[var(--color-faint)] tnum">{filtered.length} speakers</p>
       <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.slice(0, 300).map((s) => (
           <SpeakerCard key={s.name} speaker={s} onOpen={setOpen} />

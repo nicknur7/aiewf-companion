@@ -23,7 +23,7 @@ export function Chip({
     <button
       onClick={onClick}
       className={
-        "shrink-0 rounded-full border px-3 py-1.5 text-[12.5px] font-medium transition-colors " +
+        "shrink-0 rounded-md border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wide transition-colors " +
         (active
           ? "border-[var(--color-accent)] bg-[var(--color-accent)]/15 text-[var(--color-ink)]"
           : "border-[var(--color-line)] bg-[var(--color-surface)] text-[var(--color-muted)] hover:text-[var(--color-ink)]")
@@ -53,7 +53,7 @@ export function SearchInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] py-2.5 pl-9 pr-9 text-[14px] text-[var(--color-ink)] placeholder:text-[var(--color-faint)] outline-none focus:border-[var(--color-accent)]"
+        className="w-full rounded-md border border-[var(--color-line)] bg-[var(--color-surface)] py-2.5 pl-9 pr-9 text-[14px] text-[var(--color-ink)] placeholder:text-[var(--color-faint)] outline-none focus:border-[var(--color-accent)]"
       />
       {value && (
         <button
@@ -80,7 +80,7 @@ export function Star({ active, onClick }: { active: boolean; onClick: () => void
       aria-label={active ? "Remove from agenda" : "Add to agenda"}
       aria-pressed={active}
       className={
-        "shrink-0 rounded-lg border p-2 transition-colors " +
+        "shrink-0 rounded-md border p-2 transition-colors " +
         (active
           ? "border-[var(--color-accent)] bg-[var(--color-accent)]/15 text-[var(--color-accent)]"
           : "border-[var(--color-line)] text-[var(--color-faint)] hover:text-[var(--color-ink)]")
@@ -106,10 +106,10 @@ export function SessionCard({
 }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-4">
+    <div className="rounded-md border border-[var(--color-line)] bg-[var(--color-surface)] p-4 transition-colors hover:border-[var(--color-line)]/60">
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
-          <div className="mb-1.5 flex flex-wrap items-center gap-1.5 text-[11px]">
+          <div className="mb-1.5 flex flex-wrap items-center gap-1.5 font-mono text-[10.5px]">
             <span className="rounded-md bg-[var(--color-surface-2)] px-1.5 py-0.5 font-medium text-[var(--color-muted)] tnum">{shortDay(session.day)}</span>
             <span className="rounded-md bg-[var(--color-surface-2)] px-1.5 py-0.5 text-[var(--color-muted)] tnum">{session.time}</span>
             {session.track && (
@@ -152,7 +152,7 @@ export function SpeakerCard({ speaker, onOpen }: { speaker: Speaker; onOpen: (s:
   return (
     <button
       onClick={() => onOpen(speaker)}
-      className="flex items-center gap-3 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-3 text-left transition-colors hover:border-[var(--color-accent)]"
+      className="flex items-center gap-3 rounded-md border border-[var(--color-line)] bg-[var(--color-surface)] p-3 text-left transition-colors hover:border-[var(--color-accent)]"
     >
       {photo && imgOk ? (
         <img
